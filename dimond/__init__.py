@@ -118,7 +118,7 @@ class dimond:
     random_data = get_random_bytes(8)
     for i in range(8):
       data[i] = random_data[i]
-    enc_data = key_encrypt(self.name, self.password, key)
+    enc_data = key_encrypt(self.name, self.password, data)
     packet = [0x0c]
     packet += data[0:8]
     packet += enc_data[0:8]
