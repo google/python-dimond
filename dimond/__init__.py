@@ -16,6 +16,7 @@
 # Copyright 2016 Matthew Garrett <mjg59@srcf.ucam.org>
 
 import random
+import threading
 import time
 
 from bluepy import btle
@@ -134,6 +135,17 @@ class dimond:
     if self.callback is not None:
       self.device.setDelegate(Notification(self, self.callback))
       self.notification.write(bytes([0x1]), withResponse=True)
+      thread = threading.Thread(target=self.wait_for_notifications)
+      thread.Daemon = True
+      thread.start()
+
+  def wait_for_notifications(self):
+      while True:
+          try:
+            self.device.waitForNotifications(-1)
+          except btle.BTLEInternalError:
+            # If we get the response to a write then we'll break
+            pass
 
   def send_packet(self, target, command, data):
     packet = [0] * 20
@@ -158,7 +170,7 @@ class dimond:
       if time.time() - initial >= 10:
         raise Exception("Unable to connect")
       try:
-        response = self.control.write(bytes(enc_packet), withResponse=True)
+        response = self.control.write(bytes(enc_packet))
         break
       except:
         self.connect()
